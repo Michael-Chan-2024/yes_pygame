@@ -1,0 +1,96 @@
+import pygame 
+import math
+from pygame.locals import (
+    K_UP, 
+    K_DOWN, 
+    K_LEFT, 
+    K_RIGHT,
+    K_ESCAPE,
+    QUIT,
+    KEYDOWN
+)
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self) -> None:
+        super(Player, self).__init__()
+        self.surf = pygame.Surface((50,50))
+        self.surf.fill((255,255,255))
+        self.rect = self.surf.get_rect()
+        self.i = 0
+    def rainbow_effect(self, n):
+        r = 0
+        g = 0
+        b = 0
+        stepsize = math.floor((255*6/n))
+        progress = self.i * stepsize
+        match (math.floor(progress/255)):
+            case 0:
+                b = 255
+                r = progress%255
+            case 1:
+                r = 255
+                b = progress%255
+            case 2:
+                r = 255
+                g = progress%255
+            case 3:
+                g = 255
+                r = progress%255
+            case 4:
+                g = 255
+                b = progress%255
+            case 5:
+                b = 255
+                g = progress%255
+        print(r, g, b)
+        self.surf.fill((r, g, b))
+        if self.i < n:
+            self.i += 1
+        else:
+            self.i = 0
+        
+    def update(self, pressed_keys):
+        if pressed_keys[K_UP]:
+            self.rect.move_ip(0, -5)
+        if pressed_keys[K_DOWN]:
+            self.rect.move_ip(0, 5)
+        if pressed_keys[K_LEFT]:
+            self.rect.move_ip(-5, 0)
+        if pressed_keys[K_RIGHT]:
+            self.rect.move_ip(5, 0)
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.top < 0:
+            self.rect.top = 0
+        
+        
+
+pygame.init()
+
+SCREEN_WIDTH = 1920
+SCREEN_HEIGHT = 1080
+
+screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
+
+running = True
+
+
+player = Player()
+
+while running:
+    for event in pygame.event.get():
+        if event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                running = False
+        elif event.type == QUIT:
+            running = False
+
+    pressed_keys = pygame.key.get_pressed()   
+    player.update(pressed_keys)
+    player.rainbow_effect(5000)
+
+    screen.fill((0,0,0))
+    screen.blit(player.surf,player.rect)
+    pygame.display.flip()
+
+        
