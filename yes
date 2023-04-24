@@ -1,5 +1,5 @@
 import pygame 
-import math
+import random as rand
 from pygame.locals import (
     K_UP, 
     K_DOWN, 
@@ -15,7 +15,6 @@ class Player(pygame.sprite.Sprite):
     def __init__(self) -> None:
         super(Player, self).__init__()
         self.surf = pygame.Surface((50,50))
-        self.surf.fill((255,255,255))
         self.rect = self.surf.get_rect()
         self.state = 0
         self.r = 255
@@ -49,11 +48,14 @@ class Player(pygame.sprite.Sprite):
                 if self.b == 0:
                     self.state = 0
         self.surf.fill((self.r, self.g, self.b))
+    def get_pos(self):
+        return self.rect.x, self.rect.y
 
-    def fire(self):
-        projectile = Projectile()
-        projectile.update()
-        print("god")
+    # def fire(self):
+    #     projectile = Projectile()
+    #     projectile.update()
+    #     print("god")
+
     def update(self, pressed_keys):
         if pressed_keys[K_UP]:
             self.rect.move_ip(0, -1 * self.move_speed)
@@ -73,23 +75,41 @@ class Player(pygame.sprite.Sprite):
             self.rect.left = 0
         if self.rect.top > 1080 + 50:
             self.rect.top = 0
+
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self) -> None:
+        super(Enemy, self).__init__()
+        self.surf = pygame.Surface((75, 75))
+        self.surf.fill((255,0,0))
+        self.rect = self.surf.get_rect(
+            center=(rand.randint(SCREEN_WIDTH + 75, SCREEN_WIDTH + 150), 
+                    rand.randint(0, SCREEN_HEIGHT + 100))
+        )
+        self.speed = rand.randint(1,2)
+    def update(self, player_x, player_y):
+        self.rect.move_ip(-1 * self.speed, 0)
+        if self.rect.right < 0:
+            self.kill()
+       
+        
         
 
-class Projectile(Player):
-    def __init__(self) -> None:
-        super(Player, self).__init__()
-        self.surf = pygame.Surface((10, 10)) 
-        self.rect = self.surf.get_rect()
-    def update(self):
-        if self.rect.left < 0 - 50:
-            self.rect.left = 1920
-        if self.rect.top <  0 - 50:
-            self.rect.top = 1080
-        if self.rect.left > 1920 + 50:
-            self.rect.left = 0
-        if self.rect.top > 1080 + 50:
-            self.rect.top = 0
-        self.rect.move_ip(0, 1)
+# class Projectile(Player):
+#     def __init__(self) -> None:
+#         super(Player, self).__init__()
+#         self.surf = pygame.Surface((10, 10)) 
+#         self.rect = self.surf.get_rect()
+#     def update(self):
+#         if self.rect.left < 0 - 50:
+#             self.rect.left = 1920
+#         if self.rect.top <  0 - 50:
+#             self.rect.top = 1080
+#         if self.rect.left > 1920 + 50:
+#             self.rect.left = 0
+#         if self.rect.top > 1080 + 50:
+#             self.rect.top = 0
+#         self.rect.move_ip(0, 1)
         
         
 
@@ -97,13 +117,20 @@ pygame.init()
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
+running = True
 
 screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
-running = True
-
-
 player = Player()
+
+#groups
+enemies = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
+
+#custom event
+ADD_ENEMY = pygame.USEREVENT + 1
+pygame.time.set_timer(ADD_ENEMY, 250)
 
 while running:
     for event in pygame.event.get():
@@ -112,13 +139,22 @@ while running:
                 running = False
         elif event.type == QUIT:
             running = False
+        elif event.type == ADD_ENEMY:
+            new_enemy = Enemy()
+            enemies.add(new_enemy)
+            all_sprites.add(new_enemy)
 
     pressed_keys = pygame.key.get_pressed()   
     player.update(pressed_keys)
     player.rainbow_effect()
-    
+
+    enemies.update(player.get_pos()[0], player.get_pos()[1])
+    print(player.get_pos()[1])
     screen.fill((0,0,0))
-    screen.blit(player.surf,player.rect)
+
+    for entity in all_sprites:
+        screen.blit(entity.surf, entity.rect)
+
     pygame.display.flip()
 
         
